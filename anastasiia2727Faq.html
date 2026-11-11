@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Collapsible Widget</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ===== DESIGN SETTINGS (change here) ===== */
+  :root {
+    --acc: #C4647A;      /* accent / open header */
+    --bg1: #FCE7EB;      /* background gradient start */
+    --bg2: #F6C9D3;      /* background gradient end */
+    --hb: #F9DCE3;       /* closed header bg */
+    --cbg: #FFF9FA;      /* content bg */
+    --tx: #3A2A2E;       /* text */
+    --sub: #7A5A63;      /* subtitle */
+    --ic: #C4647A;       /* icon */
+    --mc: #A3203F;       /* highlight text color */
+    --chk: #E08A9C;      /* check circle */
+    --line: #EBD3D9;
+    --r: 22px;
+
+    --hf: 'Cammron Demo', 'Cormorant Garamond', serif;
+    --bf: 'Inter', sans-serif;
+    --ts: 20px;          /* title size */
+    --bs: 15px;          /* body size */
+    --qs: 15px;          /* FAQ question size */
+    --as: 15px;          /* FAQ answer size */
+    --lh: 60px;          /* logo height */
+  }
+
+  @media (max-width: 600px) {
+    :root {
+      --ts: 16px;
+      --bs: 13.5px;
+      --qs: 12px;        /* FAQ question size (mobile) */
+      --as: 12.5px;      /* FAQ answer size (mobile) */
+      --r: 18px;
+    }
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+  }
+
+  /* ===== Scrollbar: hidden / transparent (still scrollable by touch/wheel) ===== */
+  html, body {
+    background: transparent;
+    overflow-x: hidden;
+    scrollbar-width: none;            /* Firefox */
+    -ms-overflow-style: none;         /* old Edge/IE */
+  }
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  *::-webkit-scrollbar {
+    width: 0 !important;
+    height: 0 !important;
+    display: none;
+    background: transparent;
+  }
+  * {
+    scrollbar-width: none;
+    scrollbar-color: transparent transparent;
+  }
+
+  body {
+    font-family: var(--bf);
+  }
+
+  .widget {
+    display: block;
+    height: auto;
+    min-height: auto;
+  }
+
+  .wrap {
+    height: auto;
+    overflow: visible;
+    padding: 18px;
+    background: transparent;
+    border-radius: calc(var(--r) + 6px);
+    color: var(--tx);
+    font-family: var(--bf);
+    font-size: var(--bs);
+    line-height: 1.5;
+  }
+
+  .logo {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  .logo img {
+    max-height: var(--lh);
+    max-width: 100%;
+    object-fit: contain;
+  }
+
+  button {
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    background: none;
+    border: 0;
+    text-align: left;
+  }
+
+  button:focus-visible {
+    outline: 2px solid var(--acc);
+    outline-offset: 2px;
+  }
+
+  .sec {
+    margin-bottom: 14px;
+    border-radius: var(--r);
+    background: var(--cbg);
+    overflow: hidden;
+    box-shadow: 0 8px 18px rgba(140,50,70,.16), inset 0 1px 0 rgba(255,255,255,.8);
+  }
+
+  .hd {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    background: var(--hb);
+    transition: background .25s, color .25s;
+  }
+
+  .sec.open .hd {
+    background: var(--acc);
+    color: #fff;
+  }
+
+  .ic {
+    flex: none;
+    width: 34px;
+    height: 34px;
+    color: var(--ic);
+    display: grid;
+    place-items: center;
+    transition: color .25s;
+  }
+
+  .ic svg {
+    width: 32px;
+    height: 32px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .sec.open .ic {
+    color: #fff;
+  }
+
+  .tt {
+    flex: 1;
+    min-width: 0;
+    border-left: 1px solid rgba(120,60,75,.28);
+    padding-left: 16px;
+  }
+
+  .sec.open .tt {
+    border-left-color: rgba(255,255,255,.5);
+  }
+
+  .tt b {
+    display: block;
+    font-family: var(--hf);
+    font-size: var(--ts);
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    line-height: 1.15;
+  }
+
+  .tt small {
+    display: block;
+    margin-top: 2px;
+    font-size: calc(var(--bs) - 2px);
+    color: var(--sub);
+  }
+
+  .sec.open .tt small {
+    color: rgba(255,255,255,.92);
+  }
+
+  .chev {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform .3s;
+  }
+
+  .sec.open > .hd .chev {
+    transform: rotate(-90deg);
+  }
+
+  .col {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows .32s ease;
+  }
+
+  .open > .col,
+  .qi.open > .col {
+    grid-template-rows: 1fr;
+  }
+
+  .in {
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .bd {
+    padding: 6px 18px 10px;
+  }
+
+  .li {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 15px 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .li:first-child {
+    border-top: 0;
+  }
+
+  .ck {
+    flex: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--chk);
+    display: grid;
+    place-items: center;
+    margin-top: 1px;
+  }
+
+  .ck svg {
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: #fff;
+    stroke-width: 2.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .txt {
+    padding: 12px 0;
+  }
+
+  mark {
+    background: transparent;
+    color: var(--mc);
+    font-weight: 700;
+    padding: 0;
+    border-radius: 0;
+  }
+
+  .qi {
+    border-top: 1px solid var(--line);
+  }
+
+  .qi:first-child {
+    border-top: 0;
+  }
+
+  .q {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 0;
+  }
+
+  .num {
+    flex: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--acc);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: var(--bf);
+  }
+
+  .qt {
+    flex: 1;
+    min-width: 0;
+    font-weight: 700;
+    font-size: var(--qs);
+    line-height: 1.35;
+  }
+
+  .qc {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform .3s;
+  }
+
+  .qi.open .qc {
+    transform: rotate(180deg);
+  }
+
+  .ans {
+    padding: 0 0 16px 36px;
+    font-size: var(--as);
+    line-height: 1.5;
+  }
+
+  /* Styling for paragraphs inside the answer */
+  .ans p {
+    margin-bottom: 12px;
+  }
+  .ans p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* ===== Mobile: more compact FAQ ===== */
+  @media (max-width: 600px) {
+    .wrap { padding: 12px; }
+    .hd { padding: 12px 14px; gap: 10px; }
+    .ic { width: 28px; height: 28px; }
+    .ic svg { width: 26px; height: 26px; }
+    .tt { padding-left: 12px; }
+    .bd { padding: 4px 14px 8px; }
+    .li { padding: 12px 0; gap: 10px; }
+    .ck { width: 22px; height: 22px; }
+    .ck svg { width: 12px; height: 12px; }
+    .q { padding: 11px 0; gap: 9px; }
+    .num { width: 20px; height: 20px; font-size: 10.5px; }
+    .qc { width: 17px; height: 17px; }
+    .ans { padding: 0 0 12px 29px; line-height: 1.45; }
+    .ans p { margin-bottom: 8px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+
+  /* ===== FAQ tab: white background + rose border ===== */
+  .sec[data-k="faq"]{
+    background:#fff;
+    border:1.5px solid var(--acc);
+    border-radius:32px;
+    box-shadow:0 6px 16px rgba(196,100,122,.22);
+  }
+  .sec[data-k="faq"] .hd,
+  .sec[data-k="faq"].open .hd{
+    background:#fff;
+    color:var(--tx);
+  }
+  .sec[data-k="faq"] .ic,
+  .sec[data-k="faq"].open .ic{
+    color:var(--ic);
+  }
+  .sec[data-k="faq"] .tt,
+  .sec[data-k="faq"].open .tt{
+    border-left:1px solid rgba(120,60,75,.28);
+  }
+  .sec[data-k="faq"] .tt small,
+  .sec[data-k="faq"].open .tt small{
+    color:var(--tx);
+  }
+  .sec[data-k="faq"] .col .bd{
+    background:#fff;
+  }
+</style>
+</head>
+<body>
+
+<div class="widget">
+  <div class="wrap" id="wrap">
+    <div class="logo" id="logo"></div>
+    <div id="list"></div>
+  </div>
+</div>
+
+<script>
+  const CONFIG = {
+    logoUrl: '',
+    multiple: false,
+    openFirst: false,
+    fixedHeight: false
+  };
+
+  const SECTIONS = [
+    {
+      id: 'pre',
+      icon: 'calendar',
+      title: 'Pre-Care',
+      subtitle: 'Before Your Appointment',
+      type: 'list',
+      list: [
+        '**Sun & Tanning:** Avoid tanning and direct sun exposure for at least 7 days. Inform us about any recent tan.',
+        '**Hair Removal:** No waxing, sugaring, plucking, or epilators for at least 4 weeks. Shaving only.',
+        '**Shaving:** Shave the treatment area 2-12 hours before your appointment.',
+        '**Skincare:** Avoid exfoliation for 3-5 days and irritating skincare products before treatment.',
+        '**Clean Skin:** No lotions, oils, deodorant, or makeup on the treatment area.',
+        '**Health & Safety:** Inform us about medications, pregnancy, breastfeeding, skin conditions, tattoos, or recent cosmetic procedures.'
+      ]
+    },
+    {
+      id: 'after',
+      icon: 'flower',
+      title: 'Aftercare',
+      subtitle: 'Post-Treatment Instructions',
+      type: 'list',
+      list: [
+        '**Sun Protection:** Avoid tanning and direct sun exposure for at least 7 days. Use SPF 30+.',
+        '**Heat & Exercise:** Avoid saunas, hot tubs, hot baths, and intense workouts for 48 hours.',
+        '**Gentle Skincare:** Avoid acids, retinoids, scrubs, and irritating products for at least 48 hours or until skin recovers.',
+        '**Skin Recovery:** Keep treated skin cool and clean. Avoid makeup until any irritation has resolved.',
+        '**Hair Shedding:** Hair gradually sheds over the following weeks. Shaving is allowed; waxing and plucking are not.',
+        '**Exfoliation:** Gently exfoliate after 10-14 days, only if the skin has fully healed.'
+      ]
+    },
+    {
+      id: 'int',
+      icon: 'clock',
+      title: 'Treatment Intervals',
+      subtitle: 'Time Between Sessions',
+      type: 'list',
+      list: [
+        'At EVO Laser Studio, we prioritize treatment effectiveness over frequent appointments.',
+        'Rather than scheduling sessions every 3-4 weeks, we typically recommend intervals of **5-8 weeks,** allowing sufficient time for new hair growth.',
+        'Your treatment schedule is personalized based on your individual characteristics and response to treatment to achieve the best possible results.'
+      ]
+    },
+    {
+      id: 'faq',
+      icon: 'question',
+      title: 'FAQ',
+      subtitle: 'Frequently Asked Questions',
+      type: 'faq',
+      faq: [
+        {
+          q: 'HOW DOES LASER HAIR REMOVAL WORK, AND WHY DOES HAIR STOP GROWING?',
+          a: '<p>Our powerful GELIONIS diode laser emits concentrated near-infrared light, which is absorbed by melanin - the pigment inside the hair.</p><p>This light energy converts into heat and reaches the hair follicle\'s growth structures, including the cells responsible for hair production and the dermal papilla.</p><p>When these structures receive enough heat, the follicle can lose its ability to produce new hair.</p><p>If they are only partially damaged, hair may grow back, often thinner and finer. Additional treatments help achieve longer-lasting results.</p><p>That\'s why laser hair removal requires a series of treatments rather than just one session.</p>'
+        },
+        {
+          q: 'WHAT DOES LASER HAIR REMOVAL FEEL LIKE?',
+          a: '<p>Thanks to the advanced cooling system of our GELIONIS laser, treatments are designed to be comfortable.</p><p>You may feel a mild tingling sensation during treatment, usually around 2-3 out of 5 on a discomfort scale, depending on your individual sensitivity.</p><p>At EVO Laser Studio, I carefully customize laser settings to your skin and hair, balancing comfort with effective treatment.</p><p>My goal is simple: comfortable treatments, visible results, and as few sessions as possible.</p>'
+        },
+        {
+          q: 'WHAT IF I\'VE TRIED LASER HAIR REMOVAL BEFORE AND DIDN\'T GET GOOD RESULTS?',
+          a: '<p>Don\'t give up on laser hair removal just yet!</p><p>At EVO Laser Studio, our clients often notice visible hair reduction after their very first session.</p><p>If you haven\'t seen results elsewhere, come experience our GELIONIS laser and personalized treatment approach.</p>'
+        },
+        {
+          q: 'IS LASER HAIR REMOVAL REALLY PERMANENT?',
+          a: '<p>Laser hair removal provides long-lasting hair reduction. Many treated hairs may not return, but occasional maintenance sessions may be needed over time.</p>'
+        },
+        {
+          q: 'CAN LASER HAIR REMOVAL CAUSE CANCER?',
+          a: '<p>No. Research has not found a link between laser hair removal and cancer.</p><p>Our GELIONIS laser uses near-infrared light that precisely targets hair follicles within the skin. This technology has been used in medicine and aesthetics for decades.</p><p>A scientific review covering more than 25 years of laser and IPL treatments found no evidence of an increased cancer risk. Cancer Council Australia also confirms that laser hair removal uses non-ionizing light.</p><p>Interesting fact: Infrared light is even used in hospitals to keep newborn babies warm! The U.S. Food and Drug Administration (FDA) officially regulates medical devices that use infrared heat to maintain newborns\' body temperature. It\'s another example of how infrared light is used in modern healthcare.</p>'
+        },
+        {
+          q: 'CAN LASER HAIR REMOVAL HELP WITH INGROWN HAIRS AND STRAWBERRY LEGS?',
+          a: '<p>Yes! By reducing hair growth, laser treatments can help minimize ingrown hairs, razor bumps, and the appearance of dark follicle-related dots on the legs.</p>'
+        },
+        {
+          q: 'WHY CAN\'T ALL HAIR BE REMOVED IN JUST ONE SESSION?',
+          a: '<p>Hair goes through several stages of growth:</p><p>**Anagen (Active Growth):** The hair is actively growing and connected to the structures responsible for producing new hair. This is when laser hair removal is most effective.</p><p>**Catagen (Transition):** Hair growth stops, and the follicle begins to shrink. Laser treatment is generally less effective during this stage.</p><p>**Telogen (Resting):** The follicle is resting, and the hair is no longer actively growing. Laser treatment is much less effective.</p><p>**Exogen (Shedding):** The old hair is released and falls out. This shedding process can overlap with other stages of the hair cycle.</p><p>**Kenogen (Empty Follicle):** Some follicles remain temporarily empty before a new hair begins growing. There is no hair pigment available for the laser to target.</p><p>In many body areas, roughly 20% of hairs may be in the active growth phase at a given time, although the percentage varies by treatment area.</p><p>During each session, we target the hairs that are most responsive to laser treatment. Over the following weeks, other follicles enter their active growth phase and can be treated at subsequent appointments.</p><p>That\'s why multiple sessions are necessary: each treatment targets another group of actively growing hairs, gradually reducing overall hair growth.</p><p>At EVO Laser Studio, we personalize treatment intervals based on your individual hair growth and progress.</p>'
+        },
+        {
+          q: 'DOES LASER HAIR REMOVAL WORK ON BLONDE, RED, OR GRAY HAIR?',
+          a: '<p>Laser hair removal targets melanin, the pigment inside the hair. Results depend on the amount and type of pigment present.</p><p>**Blonde hair:** Laser treatment can be effective when the hair contains enough pigment, even if it appears relatively light.</p><p>**Red hair:** We successfully treat clients with red hair when their hair contains enough dark pigment. However, because red pigment absorbs laser energy less effectively, results may be somewhat less pronounced, and additional sessions may be needed compared with hair that contains predominantly dark pigment.</p><p>**Gray or white hair:** Hair that has lost its pigment generally does not respond to laser hair removal.</p><p>Our advanced GELIONIS diode laser can achieve excellent results on some blonde and red hair, but every person\'s hair is different.</p><p>At Evo Laser Studio, our professional expertise and specialized training allow us to carefully select and adjust laser settings based on your individual skin and hair characteristics. Our goal is to deliver effective treatments with visible results starting from your very first session, when treated hair begins to shed naturally.</p>'
+        },
+        {
+          q: 'CAN LASER HAIR REMOVAL BE PERFORMED OVER TATTOOS?',
+          a: '<p>No. Laser hair removal should never be performed directly over a tattoo.</p><p>The laser can interact with tattoo pigment, potentially causing burns, skin damage, or changes to the tattoo\'s appearance.</p><p>At EVO Laser Studio, we protect the tattoo by covering it and leaving a safety margin of several centimeters around it.</p><p>We can still treat the surrounding skin while carefully avoiding the tattooed area.</p><p>Your skin\'s safety always comes first.</p>'
+        },
+        {
+          q: 'IS LASER HAIR REMOVAL SUITABLE FOR DARKER SKIN TONES?',
+          a: '<p>It may be suitable for a range of skin tones, with carefully customized settings. Suitability depends on your individual skin type, and very dark skin may require a different laser technology.</p><p>We assess your skin before treatment to determine the most appropriate approach.</p>'
+        },
+        {
+          q: 'CAN I HAVE LASER HAIR REMOVAL DURING MY PERIOD?',
+          a: '<p>Absolutely! Your period does not prevent laser hair removal.</p><p>For Brazilian treatments, simply use a tampon or menstrual cup.</p>'
+        },
+        {
+          q: 'CAN HORMONAL CHANGES OR PCOS AFFECT LASER HAIR REMOVAL RESULTS?',
+          a: '<p>Yes. Hormonal changes can stimulate new hair growth, especially on the face.</p><p>Laser treatments can still significantly reduce unwanted hair, although additional or maintenance sessions may be needed.</p>'
+        },
+        {
+          q: 'WHAT\'S THE DIFFERENCE BETWEEN PROFESSIONAL DIODE LASER HAIR REMOVAL AND AT-HOME IPL DEVICES?',
+          a: '<p>At-home IPL devices use broad-spectrum light at significantly lower energy levels for safety. They can reduce hair growth but typically require more frequent and ongoing use.</p><p>Our professional GELIONIS diode laser delivers focused laser energy with individually customized settings and advanced cooling, providing a more powerful approach to effective, long-lasting hair reduction.</p>'
+        }
+      ]
+    }
+  ];
+
+  const ICONS = {
+    calendar: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18M9 15l2 2 4-4"/>',
+    flower: '<path d="M12 21c-4-2-7-5-7-9 3 0 5.5 1 7 3 1.5-2 4-3 7-3 0 4-3 7-7 9z"/><path d="M12 15c-2-2-3-5-3-8 2 1 3 3 3 5 0-2 1-4 3-5 0 3-1 6-3 8z"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    question: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8"/><path d="M12 17h.01"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+    heart: '<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>',
+    star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+    shield: '<path d="M12 3l8 3v6c0 4.5-3.4 7.7-8 9-4.6-1.3-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',
+    drop: '<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>',
+    doc: '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/>'
+  };
+
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const fmt = s => String(s ?? '').replace(/\*\*(.+?)\*\*/g,'<mark>$1</mark>');
+
+  const wrap = document.getElementById('wrap');
+  const list = document.getElementById('list');
+  const logo = document.getElementById('logo');
+
+  if (!CONFIG.fixedHeight) {
+    wrap.style.height = 'auto';
+    document.querySelector('.widget').style.minHeight = '0';
+  }
+  logo.innerHTML = CONFIG.logoUrl ? `<img src="${esc(CONFIG.logoUrl)}" alt="">` : '';
+  logo.style.display = CONFIG.logoUrl ? '' : 'none';
+
+  function secHtml(s, i) {
+    const k = s.id || String(i);
+    const open = CONFIG.openFirst && i === 0;
+    let body = '';
+
+    if (s.type === 'faq') {
+      body = (s.faq || []).map((f, j) =>
+        `<div class="qi"><button class="q" aria-expanded="false" data-q><span class="num">${j+1}</span><span class="qt">${esc(f.q)}</span><svg class="qc" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button><div class="col"><div class="in"><div class="ans">${fmt(f.a)}</div></div></div></div>`
+      ).join('');
+    } else if (s.type === 'text') {
+      body = `<div class="txt">${fmt(s.text)}</div>`;
+    } else {
+      body = (s.list || []).map(t =>
+        `<div class="li"><span class="ck"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><div>${fmt(t)}</div></div>`
+      ).join('');
+    }
+
+    return `<section class="sec${open ? ' open' : ''}" data-k="${esc(k)}"><button class="hd" aria-expanded="${open}" data-s><span class="ic"><svg viewBox="0 0 24 24">${ICONS[s.icon] || ICONS.info}</svg></span><span class="tt"><b>${esc(s.title)}</b><small>${esc(s.subtitle)}</small></span><svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><div class="col"><div class="in"><div class="bd">${body}</div></div></div></section>`;
+  }
+
+  list.innerHTML = SECTIONS.map(secHtml).join('');
+
+  function setOpen(el, on, btnSel) {
+    el.classList.toggle('open', on);
+    const b = el.querySelector(btnSel);
+    if (b) b.setAttribute('aria-expanded', String(on));
+  }
+
+  list.addEventListener('click', e => {
+    const q = e.target.closest('[data-q]');
+    if (q) {
+      const item = q.parentElement, was = item.classList.contains('open');
+      if (!CONFIG.multiple) item.parentElement.querySelectorAll('.qi.open').forEach(x => x !== item && setOpen(x, false, '.q'));
+      setOpen(item, !was, '.q');
+      return;
+    }
+    const h = e.target.closest('[data-s]');
+    if (h) {
+      const sec = h.parentElement, was = sec.classList.contains('open');
+      if (!CONFIG.multiple) list.querySelectorAll('.sec.open').forEach(x => x !== sec && setOpen(x, false, '.hd'));
+      setOpen(sec, !was, '.hd');
+    }
+  });
+</script>
+</body>
+</html>
